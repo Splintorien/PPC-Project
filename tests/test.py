@@ -16,4 +16,3 @@ items = list(INTERNAL_FACTORS.values())
 
 dictlist = [ a * b for a, b in zip(items, COEFFS['INTERN']) ]
 
-print(dictlist)
