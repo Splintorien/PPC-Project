@@ -1,13 +1,12 @@
-from multiprocessing import Array, Barrier
+from multiprocessing import Array, Barrier, Process
 import sys
 import zmq
 
-from .simulationprocess import SimulationProcess
 from .sharedvariables import SharedVariables
 from .home import Home
 
 
-class City(SimulationProcess):
+class City(Process):
     """
     Class City that represents a group of homes.
     This process will be used to launch all the home processes and instanciate communication
@@ -21,7 +20,8 @@ class City(SimulationProcess):
         homes_ipc_file: str,
         market_homes_ipc: str
     ) -> None:
-        super().__init__(shared_variables)
+        super().__init__()
+        self.shared_variables = shared_variables
         self.home_number = home_number
         self.home_barrier = Barrier(self.home_number + 1)
 
@@ -55,6 +55,7 @@ class City(SimulationProcess):
     def run(self):
         while True:
             self.update()
+            self.shared_variables.sync_barrier.wait()
 
     def update(self) -> None:
         """
