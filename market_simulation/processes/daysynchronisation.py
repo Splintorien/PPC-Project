@@ -16,7 +16,7 @@ class DaySynchronisation(SimulationProcess):
         self.day = 0
 
     def update(self) -> None:
-        print(f"Dat {self.day} ended, beginning day {self.day + 1}")
+        print(f"Day {self.day} ended, beginning day {self.day + 1}")
 
     def write(self) -> None:
         self.day += 1
