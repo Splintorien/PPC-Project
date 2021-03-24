@@ -8,7 +8,13 @@ class Home(Process):
     Class representing a home that will communicate each day with the marketplace.
     """
 
-    def __init__(self, home_barrier: Barrier, weather_shared: Array, home_pid: int) -> None:
+    def __init__(
+        self,
+        home_barrier: Barrier,
+        weather_shared: Array,
+        home_pid: int,
+        homes_ipc_file: str
+    ) -> None:
         super().__init__()
         self.home_barrier = home_barrier
         self.weather_shared = weather_shared
@@ -20,10 +26,13 @@ class Home(Process):
         self.context = zmq.Context()
         self.homes_pub = self.context.socket(zmq.PUB)
         self.homes_sub = self.context.socket(zmq.SUB)
-        self.homes_pub.bind('ipc:///tmp/homes_ipc.ipc')
-        self.homes_sub.bind('ipc:///tmp/homes_ipc.ipc')
+        self.homes_pub.bind(homes_ipc_file)
+        self.homes_sub.bind(homes_ipc_file)
 
     def run(self) -> None:
+        """
+        Home run #Baseball
+        """
         try:
             while True:
                 self.daily_turn()
@@ -31,8 +40,13 @@ class Home(Process):
             print(f"Killing softly the home process {self.home_pid}\n", end="")
 
     def daily_turn(self) -> None:
+        """
+        The daily turn of each home, where they calculate their daily consumption
+        """
         with self.weather_shared.get_lock():
             temperature = self.weather_shared[0]
+            cloud_coverage = self.weather_shared[1]
+            wind_speed = self.weather_shared[2]
 
         self.consumption = Home.get_daily_consumption(temperature)
 

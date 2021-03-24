@@ -15,7 +15,7 @@ class SimulationProcess(Process):
             self.write()
             self.run()
         except KeyboardInterrupt:
-            print("Killing the process", end="")
+            print("Keyboard interrupt received. Killing the process\n", end="")
 
     def update(self) -> None:
         """
