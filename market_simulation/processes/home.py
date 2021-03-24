@@ -13,7 +13,8 @@ class Home(Process):
         home_barrier: Barrier,
         weather_shared: Array,
         home_pid: int,
-        homes_ipc_file: str
+        homes_ipc_file: str,
+        market_homes_ipc: str
     ) -> None:
         super().__init__()
         self.home_barrier = home_barrier
@@ -29,11 +30,17 @@ class Home(Process):
         self.homes_pub.bind(homes_ipc_file)
         self.homes_sub.bind(homes_ipc_file)
 
+        self.market_pub = self.context.socket(zmq.PUB)
+        self.market_sub = self.context.socket(zmq.SUB)
+        self.market_pub.bind(market_homes_ipc)
+        self.market_sub.bind(market_homes_ipc)
+
     def run(self) -> None:
         """
         Home run #Baseball
         """
         try:
+            print(f"STARTING HOME {self.pid}")
             while True:
                 self.daily_turn()
         except KeyboardInterrupt:
@@ -50,6 +57,7 @@ class Home(Process):
 
         self.consumption = Home.get_daily_consumption(temperature)
 
+        print(f"$ Home {self.pid} consumption: {self.consumption}")
         self.home_barrier.wait()
 
     @staticmethod

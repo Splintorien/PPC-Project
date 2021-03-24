@@ -9,6 +9,7 @@ class SimulationProcess(Process):
 
     def run(self):
         try:
+            print("COUCOU")
             self.update()
             self.shared_variables.sync_barrier.wait()
 
