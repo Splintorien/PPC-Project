@@ -6,9 +6,9 @@ import concurrent.futures
 import os
 import zmq
 
-from .simulationprocess import SimulationProcess
+from multiprocessing import Process
 from .sharedvariables import SharedVariables
-class Market(SimulationProcess):
+class Market(Process):
     """
     Market class
     """
@@ -18,8 +18,9 @@ class Market(SimulationProcess):
         shared_variables: SharedVariables,
         market_homes_ipc: str
     ):
+        super().__init__()
+        self.shared_variables = shared_variables
 
-        super().__init__(shared_variables)
         self.context = zmq.Context()
         self.socket_pub = self.context.socket(zmq.PUB)
         self.socket_sub = self.context.socket(zmq.SUB)
@@ -58,8 +59,6 @@ class Market(SimulationProcess):
             'DIPLOMATIC': 0,
             'NATURAL': 0,
         }
-
-        self.run()
 
     def variation(self, coeffs: list, factors: dict):
         return sum([ a * b for a, b in zip(list(factors.values()), coeffs) ])

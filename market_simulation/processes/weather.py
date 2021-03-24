@@ -1,9 +1,17 @@
 from random import randint
 
-from .simulationprocess import SimulationProcess
+from multiprocessing import Process
+from .sharedvariables import SharedVariables
+class Weather(Process):
+    def __init__(self, shared_variables: SharedVariables):
+        super().__init__()
+        self.shared_variables = shared_variables
 
+    def run(self):
+        while True:
+            self.write()
+            self.shared_variables.sync_barrier.wait()
 
-class Weather(SimulationProcess):
     def write(self) -> None:
         """
         Update each day the weather conditions
