@@ -85,6 +85,7 @@ class Market(SimulationProcess):
         self.ENERGY['bought'] = 0
         self.ENERGY['sold'] = 0
 
+        self.shared_variables.sync_barrier.wait()
         print('starting new day...')
 
     def getMessage(self):
@@ -109,7 +110,7 @@ class Market(SimulationProcess):
 
         # signal.signal(signal.SIGUSR1, self.diplomaticEvent)
         # signal.signal(signal.SIGUSR2, self.naturalEvent)
-
+        print("Market up and running")
         with concurrent.futures.ThreadPoolExecutor(max_workers = 100) as executor:
             while True:
                 msg = self.getMessage()
