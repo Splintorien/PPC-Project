@@ -5,5 +5,8 @@
     "city": {
         "homes_ipc_file": "ipc:///tmp/homes_ipc.ipc",
         "home_number": 5
+    },
+    "market": {
+        "market_homes_ipc": "ipc:///tmp/market_homes_ipc.ipc"
     }
 }

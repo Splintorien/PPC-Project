@@ -6,6 +6,7 @@ from processes.sharedvariables import SharedVariables
 from processes.daysynchronisation import DaySynchronisation
 from processes.city import City
 from processes.weather import Weather
+from processes.market import Market
 
 class Simulation:
     """
@@ -36,6 +37,11 @@ class Simulation:
 
             self.weather = Weather(
                 shared_variables=self.shared_variables
+            )
+
+            self.market = Market(
+                shared_variables=self.shared_variables,
+                market_homes_ipc=config["market"]["market_homes_ipc"]
             )
 
             self.city.start()
