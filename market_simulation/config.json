@@ -1,0 +1,9 @@
+{
+    "simulation": {
+        "interval": 5
+    },
+    "city": {
+        "homes_ipc_file": "ipc:///tmp/homes_ipc.ipc",
+        "home_number": 5
+    }
+}
