@@ -21,11 +21,13 @@ class Market(Process):
         super().__init__()
         self.shared_variables = shared_variables
 
+        self.topic = '10'
         self.context = zmq.Context()
         self.socket_pub = self.context.socket(zmq.PUB)
         self.socket_sub = self.context.socket(zmq.SUB)
         self.socket_pub.bind(market_homes_ipc)
-        self.socket_sub.bind(market_homes_ipc)
+        self.socket_sub.connect(market_homes_ipc)
+        self.socket_sub.subscribe("")
 
         self.market_price = 1.5
         self.day = 0
@@ -60,6 +62,8 @@ class Market(Process):
             'NATURAL': 0,
         }
 
+        self.first = True
+
     def variation(self, coeffs: list, factors: dict):
         return sum([ a * b for a, b in zip(list(factors.values()), coeffs) ])
 
@@ -88,7 +92,7 @@ class Market(Process):
         print('starting new day...')
 
     def getMessage(self):
-        return self.formatMessage(self.socket_sub.recv().decode('utf-8'))
+        return self.formatMessage(self.socket_sub.recv_string())
 
     def formatMessage(self, message: str):
         if isinstance(message, str):
@@ -106,28 +110,30 @@ class Market(Process):
         return False
 
     def run(self):
+        if self.first:
+            print("Market up and running")
+            self.shared_variables.sync_barrier.wait()
+            self.first = False
 
         # signal.signal(signal.SIGUSR1, self.diplomaticEvent)
         # signal.signal(signal.SIGUSR2, self.naturalEvent)
-        print("Market up and running")
+        
         with concurrent.futures.ThreadPoolExecutor(max_workers = 100) as executor:
             while True:
+                test = self.socket_sub.recv_string()
+                print(test)
                 msg = self.getMessage()
                 print("Home request received : %s" % msg)
 
                 if msg:
                     if msg['type'] == '1':
-                        executor.submit(self.sendMessage, '1', msg['pid'], self.market_price)
+                        executor.submit(self.sendMessage, '1', msg['pid'], self.market_price*int(msg['value']))
+                        self.ENERGY['sold'] += int(msg['value'])
                     elif msg['type'] == '2':
                         executor.submit(self.sendMessage, '2', msg['pid'], self.market_price*int(msg['value']))
-                        self.ENERGY['sold'] += int(msg['value'])
-                    elif msg['type'] == '3':
-                        executor.submit(self.sendMessage, '3', msg['pid'], self.market_price*int(msg['value']))
                         self.ENERGY['bought'] += int(msg['value'])
                     elif msg['type'] == '5':
                         self.newDay()
-
-                time.sleep(0.1)
 
     def EventsTrigger(self):
         n = 50

@@ -21,7 +21,6 @@ class Home(Process):
         self.weather_shared = weather_shared
         self.home_pid = home_pid
         self.consumption = 75
-
         self.market_mq = None
 
         self.context = zmq.Context()
@@ -34,6 +33,8 @@ class Home(Process):
         self.market_sub = self.context.socket(zmq.SUB)
         self.market_pub.bind(market_homes_ipc)
         self.market_sub.bind(market_homes_ipc)
+
+        print('Home rdy')
 
     def run(self) -> None:
         """
@@ -58,6 +59,7 @@ class Home(Process):
         self.consumption = Home.get_daily_consumption(temperature)
 
         print(f"$ Home {self.pid} consumption: {self.consumption}")
+        self.market_pub.send_string("1;%s;%s"%(self.pid, self.consumption))
         self.home_barrier.wait()
 
     @staticmethod

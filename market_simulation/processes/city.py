@@ -25,6 +25,7 @@ class City(Process):
         self.home_number = home_number
         self.home_barrier = Barrier(self.home_number + 1)
 
+        print('initiate city ')
         self.context = zmq.Context()
         self.homes_pub = self.context.socket(zmq.PUB)
         self.homes_sub = self.context.socket(zmq.SUB)
@@ -35,6 +36,8 @@ class City(Process):
         self.market_sub = self.context.socket(zmq.SUB)
         self.market_pub.bind(market_homes_ipc)
         self.market_sub.bind(market_homes_ipc)
+
+        self.first = True
 
         self.homes = [
             Home(
@@ -53,6 +56,10 @@ class City(Process):
             home.start()
 
     def run(self):
+        if self.first:
+            print('City rdy')
+            self.shared_variables.sync_barrier.wait()
+            self.first = False
         while True:
             self.update()
             self.shared_variables.sync_barrier.wait()
@@ -63,7 +70,7 @@ class City(Process):
         """
         print("City arrived at barrier")
         self.home_barrier.wait()
-        self.market_pub.send(b"5;0;0")
+        self.market_pub.send_string("5;0;0")
         print("Message sent to the bro market")
 
     def kill(self) -> None:

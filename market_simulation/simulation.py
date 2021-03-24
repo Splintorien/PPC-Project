@@ -16,19 +16,22 @@ class Simulation:
     def __init__(self, config_file: str) -> None:
         with open(config_file) as file:
             config = json.load(file)
-            weather_shared = Array("i", 4)
-            sync_barrier = Barrier(parties=3)
+            weather_shared = Array("i", 3)
+            sync_barrier = Barrier(parties=4)
 
+            print('initiate sync')
             self.shared_variables = SharedVariables(
                 weather_shared=weather_shared,
                 sync_barrier=sync_barrier
             )
 
+            print('init day')
             self.sync = DaySynchronisation(
                 shared_variables=self.shared_variables,
                 interval=config["simulation"]["interval"]
             )
 
+            print('init city')
             self.city = City(
                 shared_variables=self.shared_variables,
                 home_number=config["city"]["home_number"],
@@ -36,10 +39,12 @@ class Simulation:
                 market_homes_ipc=config["market"]["market_homes_ipc"]
             )
 
+            print('init weather')
             self.weather = Weather(
                 shared_variables=self.shared_variables
             )
 
+            print('init market')
             self.market = Market(
                 shared_variables=self.shared_variables,
                 market_homes_ipc=config["market"]["market_homes_ipc"]

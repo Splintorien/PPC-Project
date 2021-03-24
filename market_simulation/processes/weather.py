@@ -6,8 +6,13 @@ class Weather(Process):
     def __init__(self, shared_variables: SharedVariables):
         super().__init__()
         self.shared_variables = shared_variables
+        self.first = True
 
     def run(self):
+        if self.first:
+            print('weather rdy')
+            self.shared_variables.sync_barrier.wait()
+            self.first = False
         while True:
             self.write()
             self.shared_variables.sync_barrier.wait()
