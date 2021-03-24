@@ -14,7 +14,17 @@ pip install -r requirements.txt
 
 ## Run the market market simulation
 
-Sadly, there is no market simulation at this moment. Just wait a little bit longer!
+This simulation can be either run in a Docker container or manually. To run the simulation with Docker, run the following command to build the container:
+
+```bash
+docker build --tag ppc-simulation .
+```
+
+Then to lauch the simulation, run:
+
+```bash
+docker run -it --rm -v $PWD:/ppc --name container-ppc-simulation ppc-simulation
+```
 
 ## Linting and formating
 
