@@ -4,23 +4,27 @@ import random
 import signal
 import concurrent.futures
 import os
-from multiprocessing import Process
 import zmq
 
-
-class Market():
+from .simulationprocess import SimulationProcess
+from .sharedvariables import SharedVariables
+class Market(SimulationProcess):
+    """
+    Market class
+    """
 
     def __init__(
-            self,
-            #shared_variables: SharedVariables,
+        self,
+        shared_variables: SharedVariables,
+        market_homes_ipc: str
     ):
 
-        super().__init__()
+        super().__init__(shared_variables)
         self.context = zmq.Context()
         self.socket_pub = self.context.socket(zmq.PUB)
         self.socket_sub = self.context.socket(zmq.SUB)
-        self.socket_pub.bind('tcp://*:5558')
-        self.socket_sub.bind('tcp://localhost:5557')
+        self.socket_pub.bind(market_homes_ipc)
+        self.socket_sub.bind(market_homes_ipc)
 
         self.market_price = 1.5
         self.day = 0
@@ -57,8 +61,6 @@ class Market():
 
         self.run()
 
-        
-
     def variation(self, coeffs: list, factors: dict):
         return sum([ a * b for a, b in zip(list(factors.values()), coeffs) ])
 
@@ -70,11 +72,10 @@ class Market():
         external_variation = self.variation(self.COEFFS['EXTERN'], self.EXTERNAL_FACTORS)
         return attenuation_variation + internal_variation + external_variation
 
-    def sendMessage(self, mtype, pid, data):   
+    def sendMessage(self, mtype, pid, data):
         ''' Send a message to Home '''
         response = (bytes("%s:%s:%s" %(mtype, pid, data), 'utf-8'))
         return self.socket_pub.send(response)
-        
 
     def newDay(self):
 
@@ -90,7 +91,6 @@ class Market():
         return self.formatMessage(self.socket_sub.recv().decode('utf-8'))
 
     def formatMessage(self, message: str):
-    
         if isinstance(message, str):
             data = message.split(';')
             if len(data) == 3:
@@ -142,22 +142,9 @@ class Market():
                 n = 50
             else:
                 n += -1
-    
+
     def diplomaticEvent(self):
         self.EXTERNAL_FACTORS['DIPLOMATIC'] = 1
-    
+
     def naturalEvent(self):
         self.EXTERNAL_FACTORS['NATURAL'] = 1
-            
-    
-
-
-if __name__ == '__main__':
-    
-    print('''-------------------------------
-        MARKET SIMULATION
--------------------------------''')
-
-    market = Market()
-   
-
