@@ -24,11 +24,13 @@ class Simulation:
                 sync_barrier=sync_barrier
             )
 
+            print('init day')
             self.sync = DaySynchronisation(
                 shared_variables=self.shared_variables,
                 interval=config["simulation"]["interval"]
             )
 
+            print('init city')
             self.city = City(
                 shared_variables=self.shared_variables,
                 home_number=config["city"]["home_number"],
@@ -36,10 +38,12 @@ class Simulation:
                 market_homes_ipc=config["market"]["market_homes_ipc"]
             )
 
+            print('init weather')
             self.weather = Weather(
                 shared_variables=self.shared_variables
             )
 
+            print('init market')
             self.market = Market(
                 shared_variables=self.shared_variables,
                 market_homes_ipc=config["market"]["market_homes_ipc"]

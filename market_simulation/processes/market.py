@@ -18,20 +18,28 @@ class Market(Process):
         shared_variables: SharedVariables,
         market_homes_ipc: str
     ):
+
         super().__init__()
         self.shared_variables = shared_variables
 
         self.context = zmq.Context()
         self.socket_pub = self.context.socket(zmq.PUB)
         self.socket_sub = self.context.socket(zmq.SUB)
-        self.socket_pub.bind(market_homes_ipc)
-        self.socket_sub.bind(market_homes_ipc)
+        self.socket_pub.bind('tcp://*:5558')
+        self.socket_sub.bind('tcp://localhost:5557')
+        self.context = zmq.Context()
+        self.socket_pub = self.context.socket(zmq.PUB)
+        self.socket_sub = self.context.socket(zmq.SUB)
+        self.socket_pub.bind('tcp://*:5556')
+
+        self.socket_sub.connect('tcp://localhost:5556')
+        self.socket_sub.setsockopt(zmq.SUBSCRIBE, b"")
 
         self.market_price = 1.5
         self.day = 0
         self.threads = []
         self.start_time = time.time()
-
+        
         # self.eventProcess = Process(target=self.EventsTrigger, args=())
 
         self.ENERGY = {
@@ -60,6 +68,9 @@ class Market(Process):
             'NATURAL': 0,
         }
 
+        self.run()
+
+        
     def variation(self, coeffs: list, factors: dict):
         return sum([ a * b for a, b in zip(list(factors.values()), coeffs) ])
 
@@ -110,8 +121,14 @@ class Market(Process):
         # signal.signal(signal.SIGUSR1, self.diplomaticEvent)
         # signal.signal(signal.SIGUSR2, self.naturalEvent)
         print("Market up and running")
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 100) as executor:
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 20) as executor:
             while True:
+                print('Market ready')
+                self.shared_variables.sync_barrier.wait()
+                print('Market listening ...')
+                test = self.socket_sub.recv()
+                print('Message received : %s' %test)
                 msg = self.getMessage()
                 print("Home request received : %s" % msg)
 

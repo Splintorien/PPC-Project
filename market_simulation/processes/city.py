@@ -1,6 +1,7 @@
 from multiprocessing import Array, Barrier, Process
 import sys
 import zmq
+import time
 
 from .sharedvariables import SharedVariables
 from .home import Home
@@ -28,13 +29,17 @@ class City(Process):
         self.context = zmq.Context()
         self.homes_pub = self.context.socket(zmq.PUB)
         self.homes_sub = self.context.socket(zmq.SUB)
+        self.homes_pub.bind('ipc:///tmp/homes_ipc.ipc')
+        self.homes_sub.bind('ipc:///tmp/homes_ipc.ipc')
         self.homes_pub.bind(homes_ipc_file)
         self.homes_sub.bind(homes_ipc_file)
 
         self.market_pub = self.context.socket(zmq.PUB)
         self.market_sub = self.context.socket(zmq.SUB)
-        self.market_pub.bind(market_homes_ipc)
-        self.market_sub.bind(market_homes_ipc)
+        self.market_pub.bind('tcp://*:5555')
+
+        self.market_sub.connect('tcp://localhost:5555')
+        self.market_sub.setsockopt(zmq.SUBSCRIBE, b"")
 
         self.homes = [
             Home(
@@ -48,11 +53,14 @@ class City(Process):
         ]
 
         print("Starting city with {} homes.".format(self.home_number))
-
         for home in self.homes:
             home.start()
 
     def run(self):
+        print('City ready')
+        self.shared_variables.sync_barrier.wait()
+        time.sleep(0.5)
+        
         while True:
             self.update()
             self.shared_variables.sync_barrier.wait()
@@ -61,6 +69,11 @@ class City(Process):
         """
         Function that the city runs each day
         """
+        print("City : Try to send msg")
+        self.market_pub.send(b"5;0;0")
+        print("City : message sent to bro market")
+        #wait for reply
+
         print("City arrived at barrier")
         self.home_barrier.wait()
         self.market_pub.send(b"5;0;0")
