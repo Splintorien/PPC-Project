@@ -16,7 +16,12 @@ class DaySynchronisation(Process):
         self.interval = interval
         self.day = 0
 
+
     def run(self):
+
+        print('Sync ready')
+        self.shared_variables.sync_barrier.wait()
+
         while True:
             self.write()
             self.shared_variables.sync_barrier.wait()

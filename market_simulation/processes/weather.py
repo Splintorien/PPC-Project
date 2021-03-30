@@ -2,12 +2,16 @@ from random import randint
 
 from multiprocessing import Process
 from .sharedvariables import SharedVariables
+from multiprocessing import Process
+from .sharedvariables import SharedVariables
 class Weather(Process):
     def __init__(self, shared_variables: SharedVariables):
         super().__init__()
         self.shared_variables = shared_variables
 
     def run(self):
+        print('weather ready')
+        self.shared_variables.sync_barrier.wait()
         while True:
             self.write()
             self.shared_variables.sync_barrier.wait()
