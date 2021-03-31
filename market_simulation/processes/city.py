@@ -1,6 +1,6 @@
 from multiprocessing import Array, Barrier, Process
 import sys
-import zmq
+import sysv_ipc
 import time
 
 from .sharedvariables import SharedVariables
@@ -24,22 +24,13 @@ class City(Process):
         super().__init__()
         self.shared_variables = shared_variables
         self.home_number = home_number
-        self.home_barrier = Barrier(self.home_number + 1)
+        self.home_barrier = Barrier(self.home_number+1)
 
-        self.context = zmq.Context()
-        self.homes_pub = self.context.socket(zmq.PUB)
-        self.homes_sub = self.context.socket(zmq.SUB)
-        self.homes_pub.bind('ipc:///tmp/homes_ipc.ipc')
-        self.homes_sub.bind('ipc:///tmp/homes_ipc.ipc')
-        self.homes_pub.bind(homes_ipc_file)
-        self.homes_sub.bind(homes_ipc_file)
+        
+        self.market2city = sysv_ipc.MessageQueue(101, sysv_ipc.IPC_CREAT)
 
-        self.market_pub = self.context.socket(zmq.PUB)
-        self.market_sub = self.context.socket(zmq.SUB)
-        self.market_pub.bind('tcp://*:5555')
-
-        self.market_sub.connect('tcp://localhost:5555')
-        self.market_sub.setsockopt(zmq.SUBSCRIBE, b"")
+        self.city2homes = sysv_ipc.MessageQueue(200, sysv_ipc.IPC_CREAT)
+        self.homes2city = sysv_ipc.MessageQueue(201, sysv_ipc.IPC_CREAT)
 
         self.homes = [
             Home(
@@ -56,10 +47,13 @@ class City(Process):
         for home in self.homes:
             home.start()
 
+        
+
     def run(self):
         print('City ready')
         self.shared_variables.sync_barrier.wait()
-        time.sleep(0.5)
+        time.sleep(0.1)
+        self.city2market = sysv_ipc.MessageQueue(100)
         
         while True:
             self.update()
@@ -69,12 +63,11 @@ class City(Process):
         """
         Function that the city runs each day
         """
-        print("City : Try to send msg")
-        self.market_pub.send(b"5;0;0")
-        print("City : message sent to bro market")
+        
+        self.city2market.send(b"5;0;0")
+        print("City : sent new day to market")
         #wait for reply
 
-        print("City arrived at barrier")
         self.home_barrier.wait()
         self.market_pub.send(b"5;0;0")
         print("Message sent to the bro market")

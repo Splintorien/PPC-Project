@@ -1,6 +1,6 @@
 from multiprocessing import Process, Barrier, Array
 from random import randint
-import zmq
+import sysv_ipc
 
 
 class Home(Process):
@@ -22,18 +22,12 @@ class Home(Process):
         self.home_pid = home_pid
         self.consumption = 75
 
-        self.market_mq = None
+        self.homes2market = sysv_ipc.MessageQueue(100)
+        self.market2homes = sysv_ipc.MessageQueue(101)
 
-        self.context = zmq.Context()
-        self.homes_pub = self.context.socket(zmq.PUB)
-        self.homes_sub = self.context.socket(zmq.SUB)
-        self.homes_pub.bind(homes_ipc_file)
-        self.homes_sub.bind(homes_ipc_file)
+        self.city2homes = sysv_ipc.MessageQueue(200)
+        self.homes2city = sysv_ipc.MessageQueue(201)
 
-        self.market_pub = self.context.socket(zmq.PUB)
-        self.market_sub = self.context.socket(zmq.SUB)
-        self.market_pub.bind(market_homes_ipc)
-        self.market_sub.bind(market_homes_ipc)
 
     def run(self) -> None:
         """
@@ -45,7 +39,7 @@ class Home(Process):
                 self.daily_turn()
         except KeyboardInterrupt:
             print(f"Killing softly the home process {self.home_pid}\n", end="")
-
+ 
     def daily_turn(self) -> None:
         """
         The daily turn of each home, where they calculate their daily consumption
@@ -54,11 +48,13 @@ class Home(Process):
             temperature = self.weather_shared[0]
             cloud_coverage = self.weather_shared[1]
             wind_speed = self.weather_shared[2]
-
+ 
         self.consumption = Home.get_daily_consumption(temperature)
-
+ 
         print(f"$ Home {self.pid} consumption: {self.consumption}")
+        self.homes2market.send("2;%s;%s"%(self.pid, self.consumption))
         self.home_barrier.wait()
+
 
     @staticmethod
     def get_daily_consumption(temperature: int) -> int:

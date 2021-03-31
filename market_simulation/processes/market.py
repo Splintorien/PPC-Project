@@ -4,43 +4,27 @@ import random
 import signal
 import concurrent.futures
 import os
-import zmq
-
 from multiprocessing import Process
+import sysv_ipc
 from .sharedvariables import SharedVariables
+import math
+
 class Market(Process):
-    """
-    Market class
-    """
 
     def __init__(
-        self,
-        shared_variables: SharedVariables,
-        market_homes_ipc: str
+            self,
+            shared_variables: SharedVariables,
     ):
 
         super().__init__()
         self.shared_variables = shared_variables
 
-        self.context = zmq.Context()
-        self.socket_pub = self.context.socket(zmq.PUB)
-        self.socket_sub = self.context.socket(zmq.SUB)
-        self.socket_pub.bind('tcp://*:5558')
-        self.socket_sub.bind('tcp://localhost:5557')
-        self.context = zmq.Context()
-        self.socket_pub = self.context.socket(zmq.PUB)
-        self.socket_sub = self.context.socket(zmq.SUB)
-        self.socket_pub.bind('tcp://*:5556')
-
-        self.socket_sub.connect('tcp://localhost:5556')
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE, b"")
+        self.city2market = sysv_ipc.MessageQueue(100, sysv_ipc.IPC_CREAT)
 
         self.market_price = 1.5
         self.day = 0
         self.threads = []
         self.start_time = time.time()
-        
-        # self.eventProcess = Process(target=self.EventsTrigger, args=())
 
         self.ENERGY = {
             'bought' : 0,
@@ -67,13 +51,18 @@ class Market(Process):
             'DIPLOMATIC': 0,
             'NATURAL': 0,
         }
-
-        self.run()
-
         
+
     def variation(self, coeffs: list, factors: dict):
         return sum([ a * b for a, b in zip(list(factors.values()), coeffs) ])
 
+    def calcStock(self, sold, bought):
+        '''Calculates new energy stock influence'''
+        stock = self.INTERNAL_FACTORS['energy_stock'] + (sold - bought)
+        if stock < 0:
+            self.INTERNAL_FACTORS['energy_stock'] = -1*math.log(abs(stock))
+        else:
+            self.INTERNAL_FACTORS['energy_stock'] = math.log(stock)
 
     def updatePrice(self, oldprice: float):
 
@@ -85,21 +74,27 @@ class Market(Process):
     def sendMessage(self, mtype, pid, data):
         ''' Send a message to Home '''
         response = (bytes("%s:%s:%s" %(mtype, pid, data), 'utf-8'))
-        return self.socket_pub.send(response)
+        print('Market : sending %s' %response)
+        return self.market2city.send(response)
+
+            
 
     def newDay(self):
 
         self.day += 1
-        self.INTERNAL_FACTORS['energy_stock'] += (self.ENERGY['sold'] - self.ENERGY['bought'])
+        self.calcStock(self.ENERGY['sold'], self.ENERGY['bought'])
         self.market_price = self.updatePrice(self.market_price)
         self.ENERGY['bought'] = 0
         self.ENERGY['sold'] = 0
 
+        print('Market : starting new day...')
+        print('Market Price is at : %s$/KWh' %self.market_price)
+        print('Market stock difference is at : %s' %self.INTERNAL_FACTORS['energy_stock'])
         self.shared_variables.sync_barrier.wait()
-        print('starting new day...')
 
     def getMessage(self):
-        return self.formatMessage(self.socket_sub.recv().decode('utf-8'))
+        message, t = self.city2market.receive()
+        return self.formatMessage(message.decode('utf-8'))
 
     def formatMessage(self, message: str):
         if isinstance(message, str):
@@ -118,19 +113,23 @@ class Market(Process):
 
     def run(self):
 
-        # signal.signal(signal.SIGUSR1, self.diplomaticEvent)
-        # signal.signal(signal.SIGUSR2, self.naturalEvent)
-        print("Market up and running")
+        signal.signal(signal.SIGUSR1, self.diplomaticEvent)
+        signal.signal(signal.SIGUSR2, self.naturalEvent)
+
+        self.market2city = sysv_ipc.MessageQueue(101)
+
+        #self.eventProcess = Process(target=self.EventsTrigger, args=())
         
         with concurrent.futures.ThreadPoolExecutor(max_workers = 20) as executor:
+            print('Market ready')
+            self.shared_variables.sync_barrier.wait()
+
+            executor.submit(self.EventsTrigger)
+            
             while True:
-                print('Market ready')
-                self.shared_variables.sync_barrier.wait()
-                print('Market listening ...')
-                test = self.socket_sub.recv()
-                print('Message received : %s' %test)
+                #print('Market : listening ...')
                 msg = self.getMessage()
-                print("Home request received : %s" % msg)
+                print("Market : home request received : %s" % msg)
 
                 if msg:
                     if msg['type'] == '1':
@@ -144,12 +143,10 @@ class Market(Process):
                     elif msg['type'] == '5':
                         self.newDay()
 
-                time.sleep(0.1)
-
     def EventsTrigger(self):
         n = 50
         while True:
-            time.sleep(1)
+            time.sleep(0.1)
             x = random.randint(0,n)
             if x == 0:
                 os.kill(os.getppid(), signal.SIGUSR1)
@@ -162,6 +159,8 @@ class Market(Process):
 
     def diplomaticEvent(self):
         self.EXTERNAL_FACTORS['DIPLOMATIC'] = 1
-
+        print('DIPLOMATIC EVENT TRIGGERED !')
+    
     def naturalEvent(self):
         self.EXTERNAL_FACTORS['NATURAL'] = 1
+        print('NATURAL EVENT TRIGGERED !')

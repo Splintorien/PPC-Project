@@ -19,6 +19,9 @@ class Simulation:
             weather_shared = Array("i", 4)
             sync_barrier = Barrier(parties=3)
 
+            
+
+            print('init sync')
             self.shared_variables = SharedVariables(
                 weather_shared=weather_shared,
                 sync_barrier=sync_barrier
@@ -30,12 +33,16 @@ class Simulation:
                 interval=config["simulation"]["interval"]
             )
 
+            print('init market')
+            self.market = Market(
+                shared_variables=self.shared_variables,
+                #market_homes_ipc=config["market"]["market_homes_ipc"]
+            )
+
             print('init city')
             self.city = City(
                 shared_variables=self.shared_variables,
                 home_number=config["city"]["home_number"],
-                homes_ipc_file=config["city"]["homes_ipc_file"],
-                market_homes_ipc=config["market"]["market_homes_ipc"]
             )
 
             print('init weather')
@@ -43,11 +50,7 @@ class Simulation:
                 shared_variables=self.shared_variables
             )
 
-            print('init market')
-            self.market = Market(
-                shared_variables=self.shared_variables,
-                market_homes_ipc=config["market"]["market_homes_ipc"]
-            )
+            
 
             self.city.start()
             self.sync.start()
