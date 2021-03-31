@@ -2,8 +2,6 @@ from random import randint
 
 from multiprocessing import Process
 from .sharedvariables import SharedVariables
-from multiprocessing import Process
-from .sharedvariables import SharedVariables
 class Weather(Process):
     def __init__(self, shared_variables: SharedVariables):
         super().__init__()
