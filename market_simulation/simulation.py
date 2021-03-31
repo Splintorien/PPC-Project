@@ -37,6 +37,9 @@ class Simulation:
             self.market = Market(
                 shared_variables=self.shared_variables,
                 #market_homes_ipc=config["market"]["market_homes_ipc"]
+                coeffs=config['market']['coeffs'],
+                internal_factors=config['market']['internal_factors'],
+                external_factors=config['market']['external_factors']
             )
 
             print('init city')

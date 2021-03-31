@@ -8,6 +8,19 @@
         "home_base_consumption": 75
     },
     "market": {
-        "market_homes_ipc": "ipc:///tmp/market_homes_ipc.ipc"
+        "market_homes_ipc": "ipc:///tmp/market_homes_ipc.ipc",
+        "coeffs": {
+            "att": 0.99,
+            "intern": [0, -0.01],
+            "extern": [1]
+        },
+        "internal_factors": {
+            "temperature": 20,
+            "energy_stock": 0
+        },
+        "external_factors": {
+            "diplomatic": 0,
+            "natural": 0
+        }
     }
 }

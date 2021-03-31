@@ -14,6 +14,9 @@ class Market(Process):
     def __init__(
             self,
             shared_variables: SharedVariables,
+            coeffs,
+            internal_factors,
+            external_factors
     ):
 
         super().__init__()
@@ -34,23 +37,11 @@ class Market(Process):
         }
 
         ''' Modulation coefficients for market price calculation '''
-        self.COEFFS = {
-            'ATT': 0.99,
-            'INTERN': [0, -0.01],
-            'EXTERN': [1],
-        }
-
+        self.COEFFS = coeffs
         ''' Internal factors that influences market price'''
-        self.INTERNAL_FACTORS = {
-            'temperature': 20,
-            'energy_stock': 0, #Difference between energy sold and energy bought
-        }
-
+        self.INTERNAL_FACTORS = internal_factors
         ''' External factors that influences market price'''
-        self.EXTERNAL_FACTORS = {
-            'DIPLOMATIC': 0,
-            'NATURAL': 0,
-        }
+        self.EXTERNAL_FACTORS = external_factors
         
 
     def variation(self, coeffs: list, factors: dict):
@@ -124,7 +115,7 @@ class Market(Process):
             print('Market ready')
             self.shared_variables.sync_barrier.wait()
 
-            executor.submit(self.EventsTrigger)
+            #executor.submit(self.EventsTrigger)
             
             while True:
                 #print('Market : listening ...')
@@ -146,7 +137,7 @@ class Market(Process):
     def EventsTrigger(self):
         n = 50
         while True:
-            time.sleep(0.1)
+            time.sleep(0.5)
             x = random.randint(0,n)
             if x == 0:
                 os.kill(os.getppid(), signal.SIGUSR1)
