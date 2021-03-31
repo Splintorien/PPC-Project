@@ -26,6 +26,14 @@ Then to lauch the simulation, run:
 docker run -it --rm -v $PWD:/ppc --name container-ppc-simulation ppc-simulation
 ```
 
+I you don't want to use Docker, you can still lauch the project by using:
+
+```bash
+python simulation.py <config file>
+```
+
+You have a config template file named `config.json` that you can modify to change the simulation parameters.
+
 ## Linting and formating
 
 In order to run the linting for the project, run the following command:
