@@ -3,9 +3,15 @@
         "interval": 5
     },
     "city": {
-        "homes_ipc_file": "ipc:///tmp/homes_ipc.ipc",
+        "homes_city_ipc_key": 156,
+        "city_homes_ipc_key": 157,
         "home_number": 5,
-        "home_base_consumption": 75
+        "base_consumption": 75,
+        "plus_consumption": 15,
+        "minus_consumption": -25,
+        "base_production": 75,
+        "plus_production": 15,
+        "minus_production": -25
     },
     "market": {
         "market_homes_ipc": "ipc:///tmp/market_homes_ipc.ipc",

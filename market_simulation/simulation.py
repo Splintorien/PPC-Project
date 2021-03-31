@@ -16,7 +16,7 @@ class Simulation:
     def __init__(self, config_file: str) -> None:
         with open(config_file) as file:
             config = json.load(file)
-            weather_shared = Array("i", 4)
+            weather_shared = Array("i", 3)
             sync_barrier = Barrier(parties=3)
 
             
@@ -46,6 +46,15 @@ class Simulation:
             self.city = City(
                 shared_variables=self.shared_variables,
                 home_number=config["city"]["home_number"],
+                homes_city_ipc_key=config["city"]["homes_city_ipc_key"],
+                city_homes_ipc_key=config["city"]["city_homes_ipc_key"],
+                market_homes_ipc=config["market"]["market_homes_ipc"],
+                base_consumption=config["city"]["base_consumption"],
+                minus_consumption=config["city"]["minus_consumption"],
+                plus_consumption=config["city"]["plus_consumption"],
+                base_production=config["city"]["base_production"],
+                minus_production=config["city"]["minus_production"],
+                plus_production=config["city"]["plus_production"]
             )
 
             print('init weather')
@@ -53,12 +62,15 @@ class Simulation:
                 shared_variables=self.shared_variables
             )
 
-            
+            # self.market = Market(
+            #     shared_variables=self.shared_variables,
+            #     market_homes_ipc=config["market"]["market_homes_ipc"]
+            # )
 
             self.city.start()
             self.sync.start()
             self.weather.start()
-            self.market.start()
+            # self.market.start()
 
             print("Simulation has been initialized")
 
