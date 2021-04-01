@@ -7,11 +7,10 @@ class Weather(Process):
     def __init__(self, shared_variables: SharedVariables):
         super().__init__()
         self.shared_variables = shared_variables
-        self.day = 0
+        self.day = 30
         self.season = 0
 
     def run(self):
-        print('weather ready')
         self.shared_variables.sync_barrier.wait()
         while True:
             self.write()
@@ -24,7 +23,6 @@ class Weather(Process):
         with self.shared_variables.weather_shared.get_lock():
             self.updateSeason()
             # Temperature
-            print(self.season)
             temperature = self.shared_variables.weather_shared[0] = int(random.gauss(25 - (6*self.season), 4))
             # Cloud coverage
             cloud_coverage = self.shared_variables.weather_shared[1] = randint(0, (30*self.season)+10)
@@ -32,10 +30,12 @@ class Weather(Process):
             wind_speed = self.shared_variables.weather_shared[2] = int(np.random.lognormal(3.7, 0.4))
 
             print(
+                "****************************\n"
                 f"** METEO REPORT - Season {self.season+1}**\n"
                 f"The temperature is {temperature}°C\n"
                 f"The cloud coverage is at {cloud_coverage}%\n"
                 f"The wind speed is currently at {wind_speed} km/h\n"
+                "****************************\n"
             )
 
     def kill(self) -> None:

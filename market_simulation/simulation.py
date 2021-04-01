@@ -19,19 +19,16 @@ class Simulation:
             weather_shared = Array("i", 3)
             sync_barrier = Barrier(parties=4)
 
-            print('init sync')
             self.shared_variables = SharedVariables(
                 weather_shared=weather_shared,
                 sync_barrier=sync_barrier
             )
 
-            print('init day')
             self.sync = DaySynchronisation(
                 shared_variables=self.shared_variables,
                 interval=config["simulation"]["interval"]
             )
 
-            print('init market')
             self.market = Market(
                 shared_variables=self.shared_variables,
                 coeffs=config['market']['coeffs'],
@@ -41,7 +38,6 @@ class Simulation:
                 city_market_ipc_key=config["city"]["city_market_ipc_key"],
             )
 
-            print('init city')
             self.city = City(
                 shared_variables=self.shared_variables,
                 home_number=config["city"]["home_number"],
@@ -55,7 +51,6 @@ class Simulation:
                 solar_panel_efficiency=config["city"]["solar_panel_efficiency"],
             )
 
-            print('init weather')
             self.weather = Weather(
                 shared_variables=self.shared_variables
             )
@@ -70,7 +65,7 @@ class Simulation:
             self.weather.start()
             self.market.start()
 
-            print("Simulation has been initialized")
+            print("°°° Simulation has been initialized °°°\n\n")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

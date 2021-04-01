@@ -38,7 +38,6 @@ class City(Process):
         self.city_market_mq = sysv_ipc.MessageQueue(city_market_ipc_key)
         self.market_city_mq = sysv_ipc.MessageQueue(market_city_ipc_key)
 
-        print("PID", os.getpid())
         self.city_pid = os.getpid()
 
         self.homes = [
@@ -48,7 +47,8 @@ class City(Process):
                 home_pid=home_pid + 1,
                 city_homes_ipc_key=city_homes_ipc_key,
                 homes_city_ipc_key=homes_city_ipc_key,
-                # market_homes_ipc=market_homes_ipc,
+                market_city_ipc_key=market_city_ipc_key,
+                city_market_ipc_key=city_market_ipc_key,
                 base_consumption=base_consumption,
                 minimal_consumption=minimal_consumption,
                 wind_turbine_efficiency=wind_turbine_efficiency,
@@ -67,7 +67,6 @@ class City(Process):
     def run(self):
         self.shared_variables.sync_barrier.wait()
         self.home_barrier.wait()
-        print("STARTING CITY")
         while True:
             self.update()
             self.shared_variables.sync_barrier.wait()
@@ -81,9 +80,7 @@ class City(Process):
         total_consumption = 0
 
         for i in range(self.home_number):
-            print("Waiting to receive")
             message, t = self.homes_city_mq.receive()
-            print(f"MESSAGE n°{i} RECEIVED", message.decode())
             message = message.decode()
             trade_type = int(message.split(';')[0])
             trade_value = int(message.split(';')[1])
@@ -100,35 +97,33 @@ class City(Process):
                 homes_messages[t]["type"] = trade_type
                 homes_messages[t]["value"] = trade_value
 
-        print("CITY TOTAL CONSUMPTION", total_consumption)
-        print("CITY TOTAL PRODUCTION", total_production)
+        print(
+            "\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n"
+            "City\n"
+            f"> Total energy wanted: {total_consumption}\n"
+            f"> Total enery to sell: {total_production}\n"
+            "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n"
+
+        )
         if total_consumption > total_production:
-            print("HELLO THERE")
             for pid in homes_messages:
                 if homes_messages[pid]["type"] == 1:
                     message = str(homes_messages[pid]["value"]).encode()
-                    print(f"Message to buy {message}")
                     self.city_homes_mq.send(message, type=pid)
                 elif homes_messages[pid]["type"] == 2:
-                    to_buy = homes_messages[pid]["value"] * total_production / total_consumption
-                    print(f"Sending to buy {to_buy}")
+                    to_buy = int(homes_messages[pid]["value"] * total_production / total_consumption)
                     self.city_homes_mq.send(str(to_buy).encode(), type=pid)
         else:
-            print("GENERAL KENOBI")
             for pid in homes_messages:
                 if homes_messages[pid]["type"] == 1:
-                    to_sell = homes_messages[pid]["value"] * total_consumption / total_production
-                    print(f"Sending to sell {to_sell}")
+                    to_sell = int(homes_messages[pid]["value"] * total_consumption / total_production)
                     self.city_homes_mq.send(str(to_sell).encode(), type=pid)
                 elif homes_messages[pid]["type"] == 2:
                     message = str(homes_messages[pid]["value"]).encode()
-                    print(f"Message to sell {message}")
                     self.city_homes_mq.send(message, type=pid)
 
-        print("City arrived at barrier")
         self.home_barrier.wait()
         self.city_market_mq.send(b"5;0;0")
-        print("Message sent to the bro market")
 
     def kill(self) -> None:
         """

@@ -16,6 +16,8 @@ class Home(Process):
         home_pid: int,
         city_homes_ipc_key: str,
         homes_city_ipc_key: str,
+        market_city_ipc_key: str,
+        city_market_ipc_key: str,
         base_consumption: int,
         minimal_consumption: int,
         wind_turbine_efficiency: float,
@@ -23,8 +25,6 @@ class Home(Process):
         city_pid: int
     ) -> None:
         super().__init__()
-
-        print("HOME PID", home_pid)
 
         self.home_barrier = home_barrier
         self.weather_shared = weather_shared
@@ -41,6 +41,8 @@ class Home(Process):
         self.homes_city_mq = sysv_ipc.MessageQueue(homes_city_ipc_key)
         self.city_homes_mq = sysv_ipc.MessageQueue(city_homes_ipc_key)
 
+        self.market_city_mq = sysv_ipc.MessageQueue(market_city_ipc_key)
+        self.city_market_mq = sysv_ipc.MessageQueue(city_market_ipc_key)
 
     def run(self) -> None:
         """
@@ -48,7 +50,6 @@ class Home(Process):
         """
         try:
             self.home_barrier.wait()
-            print(f"STARTING HOME {self.pid}")
             while True:
                 self.daily_turn()
         except KeyboardInterrupt:
@@ -66,11 +67,11 @@ class Home(Process):
         self.real_consumption = self.get_daily_consumption(temperature)
         self.real_production = self.get_daily_production(cloud_coverage, wind_speed)
         print(
-            "\n-------------\n"
+            "\n-------------------------\n"
             f"Home {self.pid}\n"
             f"** Consumption: {self.real_consumption}\n"
             f"** Production: {self.real_production}\n"
-            "-------------\n"
+            "-------------------------\n"
         )
 
         if self.real_production > self.real_consumption:
@@ -79,13 +80,24 @@ class Home(Process):
             message = f"2;{energy_to_sell}".encode()
             self.homes_city_mq.send(message, type=self.pid)
             to_sell, t = self.city_homes_mq.receive(self.pid)
-            print(f"HOME n°{self.pid} : TO SELL {to_sell.decode()}")
+            self.real_production -= int(to_sell.decode())
+            
+            diff = self.real_production - self.real_consumption
+            if diff > 0:
+                self.city_market_mq.send(f"1;{self.pid};{diff}")
+                message, t = self.market_city_mq.receive()
+
         elif self.real_production < self.real_consumption:
             energy_to_buy = self.real_consumption - self.real_production
             message = f"2;{energy_to_buy}".encode()
             self.homes_city_mq.send(message, type=self.pid)
             to_buy, t = self.city_homes_mq.receive(self.pid)
-            print(f"HOME n°{self.pid} : TO BUY {to_buy.decode()}")
+
+            self.real_consumption -= int(to_buy.decode())
+            diff = self.real_consumption - self.real_production
+            if diff > 0:
+                self.city_market_mq.send(f"2;{self.pid};{diff}")
+                message, t = self.market_city_mq.receive()
         else:
             message = "0;0".encode()
             self.homes_city_mq.send(message, type=self.pid)

@@ -19,7 +19,6 @@ class DaySynchronisation(Process):
 
     def run(self):
 
-        print('Sync ready')
         self.shared_variables.sync_barrier.wait()
 
         while True:
@@ -28,12 +27,15 @@ class DaySynchronisation(Process):
             self.update()
 
     def update(self) -> None:
-        print(f"Day {self.day} ended, beginning day {self.day + 1}")
+        print(
+            "\n########################################\n"
+            f"Day {self.day} ended, beginning day {self.day + 1}\n"
+            "########################################\n"
+        )
 
     def write(self) -> None:
         self.day += 1
         sleep(self.interval)
-        print("Timer expired")
 
     def kill(self) -> None:
         print("Stopping day synchronisation")

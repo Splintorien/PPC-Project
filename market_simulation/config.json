@@ -10,16 +10,20 @@
         "home_number": 5,
         "base_consumption": 100,
         "minimal_consumption": 10,
-        "wind_turbine_efficiency": 0.5,
-        "solar_panel_efficiency": 0.7
+        "wind_turbine_efficiency": 0.2,
+        "solar_panel_efficiency": 0.4
     },
     "market": {
         "market_city_ipc_key": 256,
         "city_market_ipc_key": 257,
         "coeffs": {
             "att": 0.99,
-            "intern": [-0.01],
-            "extern": [1]
+            "intern": [
+                -0.01
+            ],
+            "extern": [
+                1
+            ]
         },
         "internal_factors": {
             "energy_stock": 0

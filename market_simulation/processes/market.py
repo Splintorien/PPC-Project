@@ -71,7 +71,6 @@ class Market(Process):
     def send_message(self, mtype, pid, data):
         ''' Send a message to Home '''
         response = (bytes("%s:%s:%s" %(mtype, pid, data), 'utf-8'))
-        print('Market : sending %s' %response)
         return self.market2city.send(response)
 
             
@@ -84,7 +83,6 @@ class Market(Process):
         self.ENERGY['bought'] = 0
         self.ENERGY['sold'] = 0
 
-        print('Market : starting new day...')
         print('Market Price is at : %s$/KWh' %self.market_price)
         print('Market stock difference is at : %s' %self.INTERNAL_FACTORS['energy_stock'])
         self.shared_variables.sync_barrier.wait()
@@ -116,15 +114,12 @@ class Market(Process):
         #self.eventProcess = Process(target=self.events_trigger, args=())
         
         with concurrent.futures.ThreadPoolExecutor(max_workers = 20) as executor:
-            print('Market ready')
             self.shared_variables.sync_barrier.wait()
 
             #executor.submit(self.events_trigger)
             
             while True:
-                #print('Market : listening ...')
                 msg = self.get_message()
-                print("Market : home request received : %s" % msg)
 
                 if msg:
                     if msg['type'] == '1':
