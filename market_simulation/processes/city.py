@@ -65,6 +65,7 @@ class City(Process):
         
 
     def run(self):
+        self.shared_variables.sync_barrier.wait()
         self.home_barrier.wait()
         print("STARTING CITY")
         while True:
@@ -126,8 +127,8 @@ class City(Process):
 
         print("City arrived at barrier")
         self.home_barrier.wait()
-        # self.market_pub.send(b"5;0;0")
-        # print("Message sent to the bro market")
+        self.city_market_mq.send(b"5;0;0")
+        print("Message sent to the bro market")
 
     def kill(self) -> None:
         """
