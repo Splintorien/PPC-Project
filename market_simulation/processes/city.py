@@ -92,7 +92,6 @@ class City(Process):
             trade_type = int(message.split(';')[0])
             trade_value = int(message.split(';')[1])
             
-
             if trade_type == 1:
                 total_production += trade_value
                 homes_messages[t] = dict()

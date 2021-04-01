@@ -77,7 +77,7 @@ class Home(Process):
         if self.real_production > self.real_consumption:
             # Home has energy to sell, so it sends a message of type 1
             energy_to_sell = self.real_production - self.real_consumption
-            message = f"2;{energy_to_sell}".encode()
+            message = f"1;{energy_to_sell}".encode()
             self.homes_city_mq.send(message, type=self.pid)
             to_sell, t = self.city_homes_mq.receive(self.pid)
             self.real_production -= int(to_sell.decode())
