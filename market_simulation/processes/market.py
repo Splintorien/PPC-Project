@@ -111,12 +111,11 @@ class Market(Process):
             signal.signal(signal.SIGUSR1, self.diplomatic_event)
             signal.signal(signal.SIGUSR2, self.natural_event)
 
-            #self.eventProcess = Process(target=self.events_trigger, args=())
+            self.eventProcess = Process(target=self.events_trigger, args=())
+            self.eventProcess.start()
             
             with concurrent.futures.ThreadPoolExecutor(max_workers = 20) as executor:
                 self.shared_variables.sync_barrier.wait()
-
-                #executor.submit(self.events_trigger)
                 
                 while True:
                     msg = self.get_message()
@@ -140,18 +139,27 @@ class Market(Process):
             time.sleep(0.5)
             x = random.randint(0,n)
             if x == 0:
-                os.kill(os.getppid(), signal.SIGUSR1)
+                print("KILLING OS")
+                os.kill(os.getpid(), signal.SIGUSR1)
                 n = 50
             if x == 1:
-                os.kill(os.getppid(), signal.SIGUSR2)
+                os.kill(os.getpid(), signal.SIGUSR2)
                 n = 50
             else:
                 n += -1
 
-    def diplomatic_event(self):
+    def diplomatic_event(self, sig, _):
         self.EXTERNAL_FACTORS['DIPLOMATIC'] = 1
-        print('DIPLOMATIC EVENT TRIGGERED !')
+        print(
+            "£££££££££££££££££££££££££££££££££\n"
+            "DIPLOMATIC EVENT TRIGGERED !\n"
+            "£££££££££££££££££££££££££££££££££\n"
+        )
     
-    def natural_event(self):
+    def natural_event(self, sig, _):
         self.EXTERNAL_FACTORS['NATURAL'] = 1
-        print('NATURAL EVENT TRIGGERED !')
+        print(
+            "£££££££££££££££££££££££££££££££££\n"
+            "NATURAL EVENT TRIGGERED !\n"
+            "£££££££££££££££££££££££££££££££££\n"
+        )
