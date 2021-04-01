@@ -65,15 +65,11 @@ class City(Process):
         
 
     def run(self):
-        print("City process sync")
         self.shared_variables.sync_barrier.wait()
-        print("City homes sync")
         self.home_barrier.wait()
-        print("City homes free")
         try:
             while True:
                 self.update()
-                self.shared_variables.sync_barrier.wait()
         except KeyboardInterrupt:
             self.city_homes_mq.remove()
             self.homes_city_mq.remove()
@@ -130,6 +126,8 @@ class City(Process):
 
         self.home_barrier.wait()
         self.city_market_mq.send(b"5;0;0")
+        self.shared_variables.sync_barrier.wait()
+        self.home_barrier.wait()
 
     def kill(self) -> None:
         """

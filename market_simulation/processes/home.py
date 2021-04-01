@@ -52,6 +52,7 @@ class Home(Process):
             self.home_barrier.wait()
             while True:
                 self.daily_turn()
+                self.home_barrier.wait()
         except KeyboardInterrupt:
             print(f"Killing softly the home process {self.home_pid}\n", end="")
  
