@@ -107,29 +107,32 @@ class Market(Process):
         return False
 
     def run(self):
+        try:
+            signal.signal(signal.SIGUSR1, self.diplomatic_event)
+            signal.signal(signal.SIGUSR2, self.natural_event)
 
-        signal.signal(signal.SIGUSR1, self.diplomatic_event)
-        signal.signal(signal.SIGUSR2, self.natural_event)
-
-        #self.eventProcess = Process(target=self.events_trigger, args=())
-        
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 20) as executor:
-            self.shared_variables.sync_barrier.wait()
-
-            #executor.submit(self.events_trigger)
+            #self.eventProcess = Process(target=self.events_trigger, args=())
             
-            while True:
-                msg = self.get_message()
+            with concurrent.futures.ThreadPoolExecutor(max_workers = 20) as executor:
+                self.shared_variables.sync_barrier.wait()
 
-                if msg:
-                    if msg['type'] == '1':
-                         executor.submit(self.send_message, '1', msg['pid'], self.market_price*int(msg['value']))
-                         self.ENERGY['sold'] += int(msg['value'])
-                    elif msg['type'] == '2':
-                        executor.submit(self.send_message, '2', msg['pid'], self.market_price*int(msg['value']))
-                        self.ENERGY['bought'] += int(msg['value'])
-                    elif msg['type'] == '5':
-                        self.new_day()
+                #executor.submit(self.events_trigger)
+                
+                while True:
+                    msg = self.get_message()
+
+                    if msg:
+                        if msg['type'] == '1':
+                            executor.submit(self.send_message, '1', msg['pid'], self.market_price*int(msg['value']))
+                            self.ENERGY['sold'] += int(msg['value'])
+                        elif msg['type'] == '2':
+                            executor.submit(self.send_message, '2', msg['pid'], self.market_price*int(msg['value']))
+                            self.ENERGY['bought'] += int(msg['value'])
+                        elif msg['type'] == '5':
+                            self.new_day()
+        except KeyboardInterrupt:
+            self.market2city.remove()
+            self.city2market.remove()
 
     def events_trigger(self):
         n = 50
