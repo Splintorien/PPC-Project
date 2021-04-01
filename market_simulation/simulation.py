@@ -36,6 +36,7 @@ class Simulation:
                 external_factors=config["market"]["external_factors"],
                 market_city_ipc_key=config["city"]["market_city_ipc_key"],
                 city_market_ipc_key=config["city"]["city_market_ipc_key"],
+                event_probability=config["market"]["event_probability"]
             )
 
             self.city = City(

@@ -55,7 +55,7 @@ class Weather(Process):
 
     def updateSeason(self):
         self.day += 1
-        self.season = round(self.day - 5 / 4)
+        self.season = round((self.day-2) / 4)
         if self.season > 3:
             self.day = 0
             self.season = 0

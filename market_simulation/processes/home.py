@@ -44,6 +44,8 @@ class Home(Process):
         self.market_city_mq = sysv_ipc.MessageQueue(market_city_ipc_key)
         self.city_market_mq = sysv_ipc.MessageQueue(city_market_ipc_key)
 
+        self.balance = 100
+
     def run(self) -> None:
         """
         Home run #Baseball
@@ -87,6 +89,8 @@ class Home(Process):
             if diff > 0:
                 self.city_market_mq.send(f"1;{self.pid};{diff}")
                 message, t = self.market_city_mq.receive()
+                price = message.decode('utf-8').split(';')[2]
+                print(f"{self.home_pid} received {price} $")
 
         elif self.real_production < self.real_consumption:
             energy_to_buy = self.real_consumption - self.real_production
@@ -99,6 +103,8 @@ class Home(Process):
             if diff > 0:
                 self.city_market_mq.send(f"2;{self.pid};{diff}")
                 message, t = self.market_city_mq.receive()
+                price = message.decode('utf-8').split(';')[2]
+                print(f"{self.home_pid} paid {price} $")
         else:
             message = "0;0".encode()
             self.homes_city_mq.send(message, type=self.pid)

@@ -20,6 +20,7 @@ class Market(Process):
         external_factors,
         market_city_ipc_key: str,
         city_market_ipc_key: str,
+        event_probability: int,
     ):
 
         super().__init__()
@@ -35,7 +36,7 @@ class Market(Process):
         self.market_price = 1.5
         self.day = 0
         self.threads = []
-        self.start_time = time.time()
+        self.event_probability = event_probability
 
         self.ENERGY = {
             "bought": 0,
@@ -82,7 +83,7 @@ class Market(Process):
 
     def send_message(self, mtype, pid, data):
         """ Send a message to Home """
-        response = bytes("%s:%s:%s" % (mtype, pid, data), "utf-8")
+        response = bytes("%s;%s;%s" % (mtype, pid, data), "utf-8")
         return self.market2city.send(response)
 
     def new_day(self):
@@ -95,7 +96,7 @@ class Market(Process):
 
         print("Market Price is at : %s$/KWh" % self.market_price)
         print(
-            "Market stock difference is at : %s" % self.INTERNAL_FACTORS["energy_stock"]
+            "Market stock difference : %s" % self.INTERNAL_FACTORS["energy_stock"]
         )
         self.shared_variables.sync_barrier.wait()
 
@@ -136,7 +137,7 @@ class Market(Process):
                                 self.send_message,
                                 "1",
                                 msg["pid"],
-                                self.market_price * int(msg["value"]),
+                                round(self.market_price * int(msg["value"]), 2),
                             )
                             self.ENERGY["sold"] += int(msg["value"])
                         elif msg["type"] == "2":
@@ -144,7 +145,7 @@ class Market(Process):
                                 self.send_message,
                                 "2",
                                 msg["pid"],
-                                self.market_price * int(msg["value"]),
+                                round(self.market_price * int(msg["value"]), 2),
                             )
                             self.ENERGY["bought"] += int(msg["value"])
                         elif msg["type"] == "5":
@@ -156,7 +157,7 @@ class Market(Process):
     def events_trigger(self):
         n = 50
         while True:
-            time.sleep(0.5)
+            time.sleep(self.event_probability)
             x = random.randint(0, n)
             if x == 0:
                 print("KILLING OS")
@@ -169,7 +170,7 @@ class Market(Process):
                 n += -1
 
     def diplomatic_event(self, sig, _):
-        self.EXTERNAL_FACTORS["DIPLOMATIC"] = 1
+        self.EXTERNAL_FACTORS['diplomatic'] = 1
         print(
             "£££££££££££££££££££££££££££££££££\n"
             "DIPLOMATIC EVENT TRIGGERED !\n"
@@ -177,7 +178,7 @@ class Market(Process):
         )
 
     def natural_event(self, sig, _):
-        self.EXTERNAL_FACTORS["NATURAL"] = 1
+        self.EXTERNAL_FACTORS['natural'] = 1
         print(
             "£££££££££££££££££££££££££££££££££\n"
             "NATURAL EVENT TRIGGERED !\n"

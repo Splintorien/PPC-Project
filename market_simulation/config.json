@@ -22,7 +22,8 @@
                 -0.01
             ],
             "extern": [
-                1
+                0.1,
+                0.2
             ]
         },
         "internal_factors": {
@@ -31,6 +32,7 @@
         "external_factors": {
             "diplomatic": 0,
             "natural": 0
-        }
+        },
+        "event_probability": 1.5
     }
 }
