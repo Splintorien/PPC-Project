@@ -25,15 +25,18 @@ class City(Process):
         minimal_consumption: int,
         wind_turbine_efficiency: float,
         solar_panel_efficiency: float,
-
     ) -> None:
         super().__init__()
         self.shared_variables = shared_variables
         self.home_number = home_number
-        self.home_barrier = Barrier(self.home_number+1)
+        self.home_barrier = Barrier(self.home_number + 1)
 
-        self.city_homes_mq = sysv_ipc.MessageQueue(city_homes_ipc_key, sysv_ipc.IPC_CREAT)
-        self.homes_city_mq = sysv_ipc.MessageQueue(homes_city_ipc_key, sysv_ipc.IPC_CREAT)
+        self.city_homes_mq = sysv_ipc.MessageQueue(
+            city_homes_ipc_key, sysv_ipc.IPC_CREAT
+        )
+        self.homes_city_mq = sysv_ipc.MessageQueue(
+            homes_city_ipc_key, sysv_ipc.IPC_CREAT
+        )
 
         self.city_market_mq = sysv_ipc.MessageQueue(city_market_ipc_key)
         self.market_city_mq = sysv_ipc.MessageQueue(market_city_ipc_key)
@@ -53,7 +56,7 @@ class City(Process):
                 minimal_consumption=minimal_consumption,
                 wind_turbine_efficiency=wind_turbine_efficiency,
                 solar_panel_efficiency=solar_panel_efficiency,
-                city_pid=self.city_pid
+                city_pid=self.city_pid,
             )
             for home_pid in range(self.home_number)
         ]
@@ -61,8 +64,6 @@ class City(Process):
         print("Starting city with {} homes.".format(self.home_number))
         for home in self.homes:
             home.start()
-
-        
 
     def run(self):
         self.shared_variables.sync_barrier.wait()
@@ -85,9 +86,9 @@ class City(Process):
         for i in range(self.home_number):
             message, t = self.homes_city_mq.receive()
             message = message.decode()
-            trade_type = int(message.split(';')[0])
-            trade_value = int(message.split(';')[1])
-            
+            trade_type = int(message.split(";")[0])
+            trade_value = int(message.split(";")[1])
+
             if trade_type == 1:
                 total_production += trade_value
                 homes_messages[t] = dict()
@@ -105,7 +106,6 @@ class City(Process):
             f"> Total energy wanted: {total_consumption}\n"
             f"> Total enery to sell: {total_production}\n"
             "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n"
-
         )
         if total_consumption > total_production:
             for pid in homes_messages:
@@ -113,12 +113,20 @@ class City(Process):
                     message = str(homes_messages[pid]["value"]).encode()
                     self.city_homes_mq.send(message, type=pid)
                 elif homes_messages[pid]["type"] == 2:
-                    to_buy = int(homes_messages[pid]["value"] * total_production / total_consumption)
+                    to_buy = int(
+                        homes_messages[pid]["value"]
+                        * total_production
+                        / total_consumption
+                    )
                     self.city_homes_mq.send(str(to_buy).encode(), type=pid)
         else:
             for pid in homes_messages:
                 if homes_messages[pid]["type"] == 1:
-                    to_sell = int(homes_messages[pid]["value"] * total_consumption / total_production)
+                    to_sell = int(
+                        homes_messages[pid]["value"]
+                        * total_consumption
+                        / total_production
+                    )
                     self.city_homes_mq.send(str(to_sell).encode(), type=pid)
                 elif homes_messages[pid]["type"] == 2:
                     message = str(homes_messages[pid]["value"]).encode()

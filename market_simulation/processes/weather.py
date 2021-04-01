@@ -3,6 +3,8 @@ import random
 import numpy as np
 from multiprocessing import Process
 from .sharedvariables import SharedVariables
+
+
 class Weather(Process):
     def __init__(self, shared_variables: SharedVariables):
         super().__init__()
@@ -23,11 +25,17 @@ class Weather(Process):
         with self.shared_variables.weather_shared.get_lock():
             self.updateSeason()
             # Temperature
-            temperature = self.shared_variables.weather_shared[0] = int(random.gauss(25 - (6*self.season), 4))
+            temperature = self.shared_variables.weather_shared[0] = int(
+                random.gauss(25 - (6 * self.season), 4)
+            )
             # Cloud coverage
-            cloud_coverage = self.shared_variables.weather_shared[1] = randint(0, (30*self.season)+10)
+            cloud_coverage = self.shared_variables.weather_shared[1] = randint(
+                0, (30 * self.season) + 10
+            )
             # Wind speed
-            wind_speed = self.shared_variables.weather_shared[2] = int(np.random.lognormal(3.7, 0.4))
+            wind_speed = self.shared_variables.weather_shared[2] = int(
+                np.random.lognormal(3.7, 0.4)
+            )
 
             print(
                 "****************************\n"
@@ -47,7 +55,7 @@ class Weather(Process):
 
     def updateSeason(self):
         self.day += 1
-        self.season = round(self.day-5 / 4)
+        self.season = round(self.day - 5 / 4)
         if self.season > 3:
             self.day = 0
             self.season = 0

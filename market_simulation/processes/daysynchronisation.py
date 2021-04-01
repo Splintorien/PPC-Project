@@ -3,6 +3,7 @@ from time import sleep
 from multiprocessing import Process
 from .sharedvariables import SharedVariables
 
+
 class DaySynchronisation(Process):
     """
     Class used to display the current day and wait for a
@@ -15,7 +16,6 @@ class DaySynchronisation(Process):
 
         self.interval = interval
         self.day = 0
-
 
     def run(self):
 

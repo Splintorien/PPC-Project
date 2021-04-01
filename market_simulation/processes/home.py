@@ -22,7 +22,7 @@ class Home(Process):
         minimal_consumption: int,
         wind_turbine_efficiency: float,
         solar_panel_efficiency: float,
-        city_pid: int
+        city_pid: int,
     ) -> None:
         super().__init__()
 
@@ -55,7 +55,7 @@ class Home(Process):
                 self.home_barrier.wait()
         except KeyboardInterrupt:
             print(f"Killing softly the home process {self.home_pid}\n", end="")
- 
+
     def daily_turn(self) -> None:
         """
         The daily turn of each home, where they calculate their daily consumption
@@ -82,7 +82,7 @@ class Home(Process):
             self.homes_city_mq.send(message, type=self.pid)
             to_sell, t = self.city_homes_mq.receive(self.pid)
             self.real_production -= int(to_sell.decode())
-            
+
             diff = self.real_production - self.real_consumption
             if diff > 0:
                 self.city_market_mq.send(f"1;{self.pid};{diff}")
@@ -110,8 +110,10 @@ class Home(Process):
         Get the daily energy production (kWh) of a house considering the cloud coverage
         and the wind speed of the day
         """
-        wind_prod = int(self.wind_turbine_efficiency*randint(0, wind_speed))
-        solar_prod =  int(self.solar_panel_efficiency*(100-(randint(0, cloud_coverage))))
+        wind_prod = int(self.wind_turbine_efficiency * randint(0, wind_speed))
+        solar_prod = int(
+            self.solar_panel_efficiency * (100 - (randint(0, cloud_coverage)))
+        )
         daily_production = wind_prod + solar_prod
 
         return daily_production
@@ -123,8 +125,10 @@ class Home(Process):
         :return: The daily consumption in kWh
         """
 
-        daily_consumption = int(random.gauss(self.base_consumption - (3*temperature), 4))
-        
+        daily_consumption = int(
+            random.gauss(self.base_consumption - (3 * temperature), 4)
+        )
+
         if daily_consumption < self.minimal_consumption:
             daily_consumption = self.minimal_consumption
 

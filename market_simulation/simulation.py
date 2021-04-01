@@ -8,6 +8,7 @@ from processes.city import City
 from processes.weather import Weather
 from processes.market import Market
 
+
 class Simulation:
     """
     Simulation class
@@ -20,20 +21,19 @@ class Simulation:
             sync_barrier = Barrier(parties=4)
 
             self.shared_variables = SharedVariables(
-                weather_shared=weather_shared,
-                sync_barrier=sync_barrier
+                weather_shared=weather_shared, sync_barrier=sync_barrier
             )
 
             self.sync = DaySynchronisation(
                 shared_variables=self.shared_variables,
-                interval=config["simulation"]["interval"]
+                interval=config["simulation"]["interval"],
             )
 
             self.market = Market(
                 shared_variables=self.shared_variables,
-                coeffs=config['market']['coeffs'],
-                internal_factors=config['market']['internal_factors'],
-                external_factors=config['market']['external_factors'],
+                coeffs=config["market"]["coeffs"],
+                internal_factors=config["market"]["internal_factors"],
+                external_factors=config["market"]["external_factors"],
                 market_city_ipc_key=config["city"]["market_city_ipc_key"],
                 city_market_ipc_key=config["city"]["city_market_ipc_key"],
             )
@@ -51,9 +51,7 @@ class Simulation:
                 solar_panel_efficiency=config["city"]["solar_panel_efficiency"],
             )
 
-            self.weather = Weather(
-                shared_variables=self.shared_variables
-            )
+            self.weather = Weather(shared_variables=self.shared_variables)
 
             # self.market = Market(
             #     shared_variables=self.shared_variables,
@@ -66,6 +64,7 @@ class Simulation:
             self.market.start()
 
             print("°°° Simulation has been initialized °°°\n\n")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
