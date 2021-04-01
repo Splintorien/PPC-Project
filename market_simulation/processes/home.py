@@ -1,5 +1,6 @@
 from multiprocessing import Process, Barrier, Array
 from random import randint
+import random
 import sysv_ipc
 
 
@@ -16,11 +17,9 @@ class Home(Process):
         city_homes_ipc_key: str,
         homes_city_ipc_key: str,
         base_consumption: int,
-        minus_consumption: int,
-        plus_consumption: int,
-        base_production: int,
-        minus_production: int,
-        plus_production: int,
+        minimal_consumption: int,
+        wind_turbine_efficiency: float,
+        solar_panel_efficiency: float,
         city_pid: int
     ) -> None:
         super().__init__()
@@ -34,13 +33,10 @@ class Home(Process):
 
         self.base_consumption = base_consumption
         self.real_consumption = 0
-        self.minus_consumption = minus_consumption
-        self.plus_consumption = plus_consumption
-
-        self.base_production = base_production
+        self.minimal_consumption = minimal_consumption
+        self.wind_turbine_efficiency = wind_turbine_efficiency
+        self.solar_panel_efficiency = solar_panel_efficiency
         self.real_production = 0
-        self.minus_production = minus_production
-        self.plus_production = plus_production
 
         self.homes_city_mq = sysv_ipc.MessageQueue(homes_city_ipc_key)
         self.city_homes_mq = sysv_ipc.MessageQueue(city_homes_ipc_key)
@@ -98,10 +94,14 @@ class Home(Process):
 
     def get_daily_production(self, cloud_coverage: int, wind_speed: int) -> int:
         """
-        Get the daily energy production of a house considering the cloud coverage
+        Get the daily energy production (kWh) of a house considering the cloud coverage
         and the wind speed of the day
         """
-        return 0
+        wind_prod = int(self.wind_turbine_efficiency*randint(0, wind_speed))
+        solar_prod =  int(self.solar_panel_efficiency*(100-(randint(0, cloud_coverage))))
+        daily_production = wind_prod + solar_prod
+
+        return daily_production
 
     def get_daily_consumption(self, temperature: int) -> int:
         """
@@ -110,11 +110,10 @@ class Home(Process):
         :return: The daily consumption in kWh
         """
 
-        daily_consumption = self.base_consumption + randint(self.minus_consumption, self.plus_consumption)
-        if temperature <= 0:
-            daily_consumption += 20
-        elif temperature >= 30:
-            daily_consumption += 8
+        daily_consumption = int(random.gauss(self.base_consumption - (3*temperature), 4))
+        
+        if daily_consumption < self.minimal_consumption:
+            daily_consumption = self.minimal_consumption
 
         return daily_consumption
 
