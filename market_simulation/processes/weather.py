@@ -7,7 +7,7 @@ class Weather(Process):
     def __init__(self, shared_variables: SharedVariables):
         super().__init__()
         self.shared_variables = shared_variables
-        self.day = 30
+        self.day = 0
         self.season = 0
 
     def run(self):
@@ -46,8 +46,8 @@ class Weather(Process):
         super().kill()
 
     def updateSeason(self):
-        self.day =+ 1
-        self.season = round(self.day-5 / 10)
+        self.day += 1
+        self.season = round(self.day-5 / 4)
         if self.season > 3:
             self.day = 0
             self.season = 0
