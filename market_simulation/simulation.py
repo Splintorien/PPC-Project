@@ -17,9 +17,7 @@ class Simulation:
         with open(config_file) as file:
             config = json.load(file)
             weather_shared = Array("i", 3)
-            sync_barrier = Barrier(parties=3)
-
-            
+            sync_barrier = Barrier(parties=4)
 
             print('init sync')
             self.shared_variables = SharedVariables(
@@ -36,10 +34,11 @@ class Simulation:
             print('init market')
             self.market = Market(
                 shared_variables=self.shared_variables,
-                #market_homes_ipc=config["market"]["market_homes_ipc"]
                 coeffs=config['market']['coeffs'],
                 internal_factors=config['market']['internal_factors'],
-                external_factors=config['market']['external_factors']
+                external_factors=config['market']['external_factors'],
+                market_city_ipc_key=config["city"]["market_city_ipc_key"],
+                city_market_ipc_key=config["city"]["city_market_ipc_key"],
             )
 
             print('init city')
@@ -48,13 +47,12 @@ class Simulation:
                 home_number=config["city"]["home_number"],
                 homes_city_ipc_key=config["city"]["homes_city_ipc_key"],
                 city_homes_ipc_key=config["city"]["city_homes_ipc_key"],
-                market_homes_ipc=config["market"]["market_homes_ipc"],
+                market_city_ipc_key=config["city"]["market_city_ipc_key"],
+                city_market_ipc_key=config["city"]["city_market_ipc_key"],
                 base_consumption=config["city"]["base_consumption"],
-                minus_consumption=config["city"]["minus_consumption"],
-                plus_consumption=config["city"]["plus_consumption"],
-                base_production=config["city"]["base_production"],
-                minus_production=config["city"]["minus_production"],
-                plus_production=config["city"]["plus_production"]
+                minimal_consumption=config["city"]["minimal_consumption"],
+                wind_turbine_efficiency=config["city"]["wind_turbine_efficiency"],
+                solar_panel_efficiency=config["city"]["solar_panel_efficiency"],
             )
 
             print('init weather')
@@ -70,7 +68,7 @@ class Simulation:
             self.city.start()
             self.sync.start()
             self.weather.start()
-            # self.market.start()
+            self.market.start()
 
             print("Simulation has been initialized")
 

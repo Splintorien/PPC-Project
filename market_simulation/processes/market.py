@@ -16,13 +16,16 @@ class Market(Process):
             shared_variables: SharedVariables,
             coeffs,
             internal_factors,
-            external_factors
+            external_factors,
+            market_city_ipc_key: str,
+            city_market_ipc_key: str,
     ):
 
         super().__init__()
         self.shared_variables = shared_variables
 
-        self.city2market = sysv_ipc.MessageQueue(100, sysv_ipc.IPC_CREAT)
+        self.city2market = sysv_ipc.MessageQueue(city_market_ipc_key, sysv_ipc.IPC_CREAT)
+        self.market2city = sysv_ipc.MessageQueue(market_city_ipc_key, sysv_ipc.IPC_CREAT)
 
         self.market_price = 1.5
         self.day = 0
@@ -106,8 +109,6 @@ class Market(Process):
 
         signal.signal(signal.SIGUSR1, self.diplomaticEvent)
         signal.signal(signal.SIGUSR2, self.naturalEvent)
-
-        self.market2city = sysv_ipc.MessageQueue(101)
 
         #self.eventProcess = Process(target=self.EventsTrigger, args=())
         

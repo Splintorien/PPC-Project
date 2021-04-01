@@ -19,13 +19,13 @@ class City(Process):
         home_number: int,
         city_homes_ipc_key: str,
         homes_city_ipc_key: str,
-        market_homes_ipc: str,
+        city_market_ipc_key: str,
+        market_city_ipc_key: str,
         base_consumption: int,
-        plus_consumption: int,
-        minus_consumption: int,
-        base_production: int,
-        plus_production: int,
-        minus_production: int,
+        minimal_consumption: int,
+        wind_turbine_efficiency: float,
+        solar_panel_efficiency: float,
+
     ) -> None:
         super().__init__()
         self.shared_variables = shared_variables
@@ -34,6 +34,9 @@ class City(Process):
 
         self.city_homes_mq = sysv_ipc.MessageQueue(city_homes_ipc_key, sysv_ipc.IPC_CREAT)
         self.homes_city_mq = sysv_ipc.MessageQueue(homes_city_ipc_key, sysv_ipc.IPC_CREAT)
+
+        self.city_market_mq = sysv_ipc.MessageQueue(city_market_ipc_key)
+        self.market_city_mq = sysv_ipc.MessageQueue(market_city_ipc_key)
 
         print("PID", os.getpid())
         self.city_pid = os.getpid()
@@ -47,11 +50,9 @@ class City(Process):
                 homes_city_ipc_key=homes_city_ipc_key,
                 # market_homes_ipc=market_homes_ipc,
                 base_consumption=base_consumption,
-                minus_consumption=minus_consumption,
-                plus_consumption=plus_consumption,
-                base_production=base_production,
-                minus_production=minus_production,
-                plus_production=plus_production,
+                minimal_consumption=minimal_consumption,
+                wind_turbine_efficiency=wind_turbine_efficiency,
+                solar_panel_efficiency=solar_panel_efficiency,
                 city_pid=self.city_pid
             )
             for home_pid in range(self.home_number)

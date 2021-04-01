@@ -5,23 +5,23 @@
     "city": {
         "homes_city_ipc_key": 156,
         "city_homes_ipc_key": 157,
+        "market_city_ipc_key": 256,
+        "city_market_ipc_key": 257,
         "home_number": 5,
-        "base_consumption": 75,
-        "plus_consumption": 15,
-        "minus_consumption": -25,
-        "base_production": 75,
-        "plus_production": 15,
-        "minus_production": -25
+        "base_consumption": 100,
+        "minimal_consumption": 10,
+        "wind_turbine_efficiency": 0.5,
+        "solar_panel_efficiency": 0.7
     },
     "market": {
-        "market_homes_ipc": "ipc:///tmp/market_homes_ipc.ipc",
+        "market_city_ipc_key": 256,
+        "city_market_ipc_key": 257,
         "coeffs": {
             "att": 0.99,
-            "intern": [0, -0.01],
+            "intern": [-0.01],
             "extern": [1]
         },
         "internal_factors": {
-            "temperature": 20,
             "energy_stock": 0
         },
         "external_factors": {
