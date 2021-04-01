@@ -32,7 +32,7 @@ class Weather(Process):
             wind_speed = self.shared_variables.weather_shared[2] = int(np.random.lognormal(3.7, 0.4))
 
             print(
-                f"** METEO REPORT - Season {self.season}**\n"
+                f"** METEO REPORT - Season {self.season+1}**\n"
                 f"The temperature is {temperature}°C\n"
                 f"The cloud coverage is at {cloud_coverage}%\n"
                 f"The wind speed is currently at {wind_speed} km/h\n"
