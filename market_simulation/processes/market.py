@@ -128,12 +128,10 @@ class Market(Process):
 
                 if msg:
                     if msg['type'] == '1':
-                        executor.submit(self.send_message, '1', msg['pid'], self.market_price)
+                         executor.submit(self.send_message, '1', msg['pid'], self.market_price*int(msg['value']))
+                         self.ENERGY['sold'] += int(msg['value'])
                     elif msg['type'] == '2':
                         executor.submit(self.send_message, '2', msg['pid'], self.market_price*int(msg['value']))
-                        self.ENERGY['sold'] += int(msg['value'])
-                    elif msg['type'] == '3':
-                        executor.submit(self.send_message, '3', msg['pid'], self.market_price*int(msg['value']))
                         self.ENERGY['bought'] += int(msg['value'])
                     elif msg['type'] == '5':
                         self.new_day()
